@@ -55,12 +55,11 @@ mkdir data-scrap
 #######################
 ##   DATA DOWNLOAD    #
 #######################
-#
-#
+
 ## valid/test wmt2018 data
-#
+
 wget -O multi-valid.tgz http://data.statmt.org/wmt18/translation-task/dev.tgz
-#
+
 tar zxvf multi-valid.tgz -C ./data/
 
 
@@ -73,14 +72,10 @@ mv ./data/dev/newsdev2015-fien-src.fi.sgm ./data/fi-valid/valid1-fi-en.fi
 mv ./data/dev/newsdev2018-eten-ref.en.sgm ./data/et-valid/valid1-et-en.en
 mv ./data/dev/newsdev2018-eten-src.et.sgm ./data/et-valid/valid1-et-en.et
 
-
-#
 ###Gujarati Training Data Download
-##
 wget -O gu-en-bible.tsv.gz http://data.statmt.org/wmt19/translation-task/bible.gu-en.tsv.gz
 wget -O gu-en-wiki.tsv.gz http://data.statmt.org/wmt19/translation-task/wikipedia.gu-en.tsv.gz
 wget -O gu-en-wikititles.tsv.gz http://data.statmt.org/wikititles/v1/wikititles-v1.gu-en.tsv.gz
-
 gunzip -c gu-en-wiki.tsv.gz > ./data/gu/wiki.tsv
 gunzip -c gu-en-wikititles.tsv.gz > ./data/gu/titles.tsv
 gunzip -c gu-en-bible.tsv.gz > ./data/gu/bible.tsv
@@ -88,11 +83,9 @@ gunzip -c gu-en-bible.tsv.gz > ./data/gu/bible.tsv
 ##### Valid and Testing
 
 ###Estonian Training Data Download
-##
-wget -O et-en-europarl.tgz https://www.statmt.org/europarl/v7/et-en.tgz
-##wget -O et-en-paracrawl.tgz https://s3.amazonaws.com/web-language-models/paracrawl/release1/paracrawl-release1.en-et.zipporah0-dedup-clean.tgz
 
-##tar zxvf et-en-paracrawl.tgz -C ./data/et
+wget -O et-en-europarl.tgz https://www.statmt.org/europarl/v7/et-en.tgz
+
 tar zxvf et-en-europarl.tgz -C ./data/et
 
 ###Finnish Training Data Download
@@ -106,18 +99,17 @@ gunzip -c fi-en-wiki.tsv.gz > ./data/fi/wiki.tsv
 gunzip -c fi-en-europarl.tsv.gz > ./data/fi/europarl.tsv
 
 ###Nepali Training Data Download
-##
-##
+
 ###Hindi Training Data Download
 wget -O hi-en-iitb.tgz https://www.cfilt.iitb.ac.in/~parallelcorp/iitb_en_hi_parallel/iitb_corpus_download/parallel.tgz
 
 tar zxvf hi-en-iitb.tgz -C ./data/hi
 
 ###Hindi DevTest data
-##
-#wget -O hi-en-devtest.tgz https://www.cfilt.iitb.ac.in/~parallelcorp/iitb_en_hi_parallel/iitb_corpus_download/dev_test.tgz
-###
-#tar zxvf  hi-en-devtest.tgz -C ./data/hi
+
+wget -O hi-en-devtest.tgz https://www.cfilt.iitb.ac.in/~parallelcorp/iitb_en_hi_parallel/iitb_corpus_download/dev_test.tgz
+
+tar zxvf  hi-en-devtest.tgz -C ./data/hi
 
 ### FINNISH ####
 python -c 'import processor; processor.file_combine("./data/fi/paracrawl-release1.en-fi.zipporah0-dedup-clean.fi","./data/fi/paracrawl-release1.en-fi.zipporah0-dedup-clean.en","fi","en")'
@@ -164,22 +156,22 @@ python -c 'import processor; processor.complete_process("./data/en-hi-concat","h
 python -c 'import processor; processor.byte_encode("./hi-en.train_hi","hi-en.train.hi")'
 
 python -c 'import processor; processor.byte_encode("./hi-en.train_en","hi-en.train.en")'
+
 ## Hindi Valid/Dev data
-#python -c 'import processor; processor.file_combine("./data/hi/dev_test/dev.hi","./data/hi/dev_test/dev.en","hi","en","data/hi/hi-en.dev)'
-#
-#cat ./data/hi/hi-en.dev > ./data/en-hi-dev-concat
-#
-#python -c 'import processor; processor.complete_process("./data/en-hi-dev-concat","hi","en", "hi-en.valid")'
-#
-#
+python -c 'import processor; processor.file_combine("./data/hi/dev_test/dev.hi","./data/hi/dev_test/dev.en","hi","en","data/hi/hi-en.dev)'
+
+cat ./data/hi/hi-en.dev > ./data/en-hi-dev-concat
+
+python -c 'import processor; processor.file_split("./data/en-hi-dev-concat","hi","en", "hi-en.valid_hi", "hi-en.valid_en")'
+
 ### Hindi Test Data
-#
-#python -c 'import processor; processor.file_combine("./data/hi/dev_test/test.hi","./data/hi/dev_test/test.en","hi","en","data/hi/hi-en.test")'
-#
-#cat ./data/hi/hi-en.test > ./data/en-hi-test-concat
-#
-#python -c 'import processor; processor.file_split("./data/en-hi-test-concat","hi","en", "hi-en.test.hi", "hi-en.test.en")'
-#
+
+python -c 'import processor; processor.file_combine("./data/hi/dev_test/test.hi","./data/hi/dev_test/test.en","hi","en","data/hi/hi-en.test")'
+
+cat ./data/hi/hi-en.test > ./data/en-hi-test-concat
+
+python -c 'import processor; processor.file_split("./data/en-hi-test-concat","hi","en", "hi-en.test_hi", "hi-en.test_en")'
+
 ##rm -r ./data/hi/parallel
 
 ### GUJARATI ###
