@@ -156,14 +156,18 @@ def remove_nonalpha(src, tgt, lang1, lang2):
  
  
 def byte_encode(file, prefix=None):
+    #put a space token between words
     bfile = open("{}-byte-encoded".format(prefix), "x")
     with open(file, "r") as f:
         for line in f.readlines():
-            arr = bytes(line, 'utf-8')
-            #arr2 = bytes(string, 'ascii')
-            for byte in arr:
-                bfile.write(str(byte))
-                bfile.write(" ")
+            line_split = line.split(" ")
+            for word in line_split:
+                arr = bytes(word, 'utf-8')
+                #arr2 = bytes(string, 'ascii')
+                for byte in arr:
+                    bfile.write(str(byte))
+                    bfile.write(" ")
+                bfile.write("▁")
             bfile.write("\n")
     
 def complete_process(concat_file, src, tgt, file_prefix=None):
