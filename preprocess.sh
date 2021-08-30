@@ -37,6 +37,10 @@ if [ ! -d "data" ]; then
   
 fi
 
+cd data
+mkdir ne-valid
+cd ../
+
 echo 'data directories made...'
 
 mkdir data-bin
@@ -85,8 +89,6 @@ gunzip -c gu-en-wiki.tsv.gz > ./data/gu/wiki.tsv
 gunzip -c gu-en-wikititles.tsv.gz > ./data/gu/titles.tsv
 gunzip -c gu-en-bible.tsv.gz > ./data/gu/bible.tsv
 
-##### Valid and Testing
-
 ###Estonian Training Data Download
 
 wget -O et-en-europarl.tgz https://www.statmt.org/europarl/v7/et-en.tgz
@@ -104,6 +106,11 @@ gunzip -c fi-en-wiki.tsv.gz > ./data/fi/wiki.tsv
 gunzip -c fi-en-europarl.tsv.gz > ./data/fi/europarl.tsv
 
 ###Nepali Training Data Download
+
+tar -xvzf https://dl.fbaipublicfiles.com/flores101/dataset/flores101_dataset.tar.gz -C ./data/ne-valid
+
+mv ./data/ne-valid/flores101_dataset/dev/npi.dev ./data/ne-valid/valid-ne-en.ne
+mv ./data/ne-valid/flores101_dataset/dev/eng.dev ./data/ne-valid/valid-ne-en.en
 
 ###Hindi Training Data Download
 wget -O hi-en-iitb.tgz https://www.cfilt.iitb.ac.in/~parallelcorp/iitb_en_hi_parallel/iitb_corpus_download/parallel.tgz
@@ -187,3 +194,10 @@ python -c 'import processor; processor.complete_process("./data/en-gu-concat","g
 python -c 'import processor; processor.byte_encode("./gu-en.train_gu","gu-en.train.gu")'
 
 python -c 'import processor; processor.byte_encode("./gu-en.train_en","gu-en.train.en")'
+
+### NEPALI ###
+
+python -c 'import processor; processor.byte_encode("./ne-en.train_ne","ne-en.train.ne")'
+
+python -c 'import processor; processor.byte_encode("./ne-en.train_en","ne-en.train.en")'
+
