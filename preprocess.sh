@@ -56,21 +56,26 @@ mkdir data-scrap
 ##   DATA DOWNLOAD    #
 #######################
 
-## valid/test wmt2018 data
+## valid/test wmt data
 
 wget -O multi-valid.tgz http://data.statmt.org/wmt18/translation-task/dev.tgz
 
 tar zxvf multi-valid.tgz -C ./data/
 
+wget -O gu-valid.tgz http://data.statmt.org/wmt19/translation-task/dev.tgz
+
+tar zxvf gu-valid.tgz -C ./data/
 
 ###MOVE DATA###
 
-mv ./data/dev/newsdev2015-fien-ref.en.sgm ./data/fi-valid/valid1-fi-en.en
-mv ./data/dev/newsdev2015-fien-src.fi.sgm ./data/fi-valid/valid1-fi-en.fi
+mv ./data/dev/newsdev2015-fien-ref.en.sgm ./data/fi-valid/valid-fi-en.en
+mv ./data/dev/newsdev2015-fien-src.fi.sgm ./data/fi-valid/valid-fi-en.fi
 
+mv ./data/dev/newsdev2018-eten-ref.en.sgm ./data/et-valid/valid-et-en.en
+mv ./data/dev/newsdev2018-eten-src.et.sgm ./data/et-valid/valid-et-en.et
 
-mv ./data/dev/newsdev2018-eten-ref.en.sgm ./data/et-valid/valid1-et-en.en
-mv ./data/dev/newsdev2018-eten-src.et.sgm ./data/et-valid/valid1-et-en.et
+mv ./data/dev/newsdev2019-guen-src.gu.sgm ./data/gu-valid/valid-gu-en.gu
+mv ./data/dev/newsdev2019-guen-ref.en.sgm ./data/gu-valid/valid-gu-en.en
 
 ###Gujarati Training Data Download
 wget -O gu-en-bible.tsv.gz http://data.statmt.org/wmt19/translation-task/bible.gu-en.tsv.gz
