@@ -64,7 +64,7 @@ for ((i=0;i<${#SRCS[@]};++i)); do
     python "$SPM_ENCODE" \
         --model "$DATA/sentencepiece.char.model" \
         --output_format=piece \
-        --inputs ./data/${SRC}-${TGT}.valid_${SRC} ./data/${SRC}-${TGT}.valid_${TGT} \
+        --inputs ./data/${SRC}-valid/valid-${SRC}-${TGT}.${SRC} ./data/${SRC}-valid/valid-${SRC}-${TGT}.${TGT} \
         --outputs $DATA/valid.char.${SRC}-${TGT}.${SRC} $DATA/valid.char.${SRC}-${TGT}.${TGT}
 done
 
