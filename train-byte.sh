@@ -55,8 +55,8 @@ for SRC in "${SRCS[@]}"; do
     python "$SPM_ENCODE" \
         --model "$DATA/sentencepiece.byte.model" \
         --output_format=piece \
-        --inputs ./${SRC}-${TGT}.train.${TGT}-byte-encoded ./${SRC}-${TGT}.train.${TGT}-byte-encoded \
-        --outputs ./data/train.byte.${SRC}-${TGT}.${SRC} ./data/train.byte.${SRC}-${TGT}.${TGT} \
+        --inputs ./data/${SRC}/${SRC}-${TGT}.train.${TGT}-byte-encoded ./data/${SRC}/${SRC}-${TGT}.train.${TGT}-byte-encoded \
+        --outputs $DATA/train.byte.${SRC}-${TGT}.${SRC} $DATA/train.byte.${SRC}-${TGT}.${TGT} \
         --min-len $TRAIN_MINLEN --max-len $TRAIN_MAXLEN
 done
 
@@ -67,7 +67,7 @@ for ((i=0;i<${#SRCS[@]};++i)); do
     python "$SPM_ENCODE" \
         --model "$DATA/sentencepiece.byte.model" \
         --output_format=piece \
-        --inputs ./${SRC}-${TGT}.valid.${TGT}-byte-encoded ./${SRC}-${TGT}.valid.${TGT}-byte-encoded \
+        --inputs ./data/${SRC}-valid/${SRC}-${TGT}.valid.${TGT}-byte-encoded ./data/${SRC}-valid/${SRC}-${TGT}.valid.${TGT}-byte-encoded \
         --outputs $DATA/valid.byte.${SRC}-${TGT}.${SRC} $DATA/valid.byte.${SRC}-${TGT}.${TGT}
 done
 
@@ -83,8 +83,8 @@ tail -n +4 ./multi.en.byte32k/sentencepiece.byte.vocab | cut -f1 | sed 's/$/ 100
 
 for SRC in "${SRCS[@]}"; do
     fairseq-preprocess --source-lang ${SRC} --target-lang en \
-        --trainpref ./data/train.byte.${SRC}-en \
-        --validpref ./data/valid.byte.${SRC}-en \
+        --trainpref $DATA/train.byte.${SRC}-en \
+        --validpref $DATA/valid.byte.${SRC}-en \
         --tgtdict fairseq-multi-en-byte.vocab \
         --destdir data-bin/multi-en.byte32k/ \
         --workers 10
