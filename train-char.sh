@@ -54,7 +54,7 @@ for SRC in "${SRCS[@]}"; do
         --model "$DATAC/sentencepiece.char.model" \
         --output_format=piece \
         --inputs ./${SRC}-${TGT}.train_${SRC}-sampled ./${SRC}-${TGT}.train_${TGT}-sampled \
-        --outputs ./data/train.char.${SRC}-${TGT}.${SRC} ./data/train.char.${SRC}-${TGT}.${TGT} \
+        --outputs $DATA/train.char.${SRC}-${TGT}.${SRC} $DATA/train.char.${SRC}-${TGT}.${TGT} \
         --min-len $TRAIN_MINLEN --max-len $TRAIN_MAXLEN
 done
 
@@ -79,8 +79,8 @@ tail -n +4 ./multi.en.char32k/sentencepiece.char.vocab | cut -f1 | sed 's/$/ 100
 
 for SRC in "${SRCS[@]}"; do
     fairseq-preprocess --source-lang ${SRC} --target-lang en \
-        --trainpref ./data/train.char.${SRC}-en \
-        --validpref ./data/valid.char.${SRC}-en \
+        --trainpref $DATA/train.char.${SRC}-en \
+        --validpref $DATA/valid.char.${SRC}-en \
         --tgtdict fairseq-multi-en-char.vocab \
         --destdir data-bin/multi-en.char32k/ \
         --workers 10
