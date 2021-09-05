@@ -1,9 +1,9 @@
 #!/bin/sh
 #  preprocess.sh
-#  
+#
 #
 #  Created by Sonal Sannigrahi on 02/07/2021.
-#  
+#
 export PATH=/opt/homebrew/bin:$PATH
 
 #install dependencies
@@ -14,6 +14,7 @@ SRCS=(
     "fi"
     "et"
     "hi"
+    "ne"
     "gu"
 )
 
@@ -37,9 +38,6 @@ if [ ! -d "data" ]; then
   
 fi
 
-cd data
-mkdir ne-valid
-cd ../
 
 echo 'data directories made...'
 
@@ -105,9 +103,11 @@ tar zxvf fi-en-paracrawl.tgz -C ./data/fi
 gunzip -c fi-en-wiki.tsv.gz > ./data/fi/wiki.tsv
 gunzip -c fi-en-europarl.tsv.gz > ./data/fi/europarl.tsv
 
-###Nepali Training Data Download
+###Nepali Data Download
 
-tar -xvzf https://dl.fbaipublicfiles.com/flores101/dataset/flores101_dataset.tar.gz -C ./data/ne-valid
+wget -O ne-en-flores.tar.gz https://dl.fbaipublicfiles.com/flores101/dataset/flores101_dataset.tar.gz
+
+tar -xvzf ne-en-flores.tar.gz -C ./data/ne-valid
 
 mv ./data/ne-valid/flores101_dataset/dev/npi.dev ./data/ne-valid/valid-ne-en.ne
 mv ./data/ne-valid/flores101_dataset/dev/eng.dev ./data/ne-valid/valid-ne-en.en
@@ -121,7 +121,7 @@ tar zxvf hi-en-iitb.tgz -C ./data/hi
 
 wget -O hi-en-devtest.tgz https://www.cfilt.iitb.ac.in/~parallelcorp/iitb_en_hi_parallel/iitb_corpus_download/dev_test.tgz
 
-tar zxvf  hi-en-devtest.tgz -C ./data/hi
+tar zxvf  hi-en-devtest.tgz -C ./data/hi-valid
 
 ### FINNISH ####
 python -c 'import processor; processor.file_combine("./data/fi/paracrawl-release1.en-fi.zipporah0-dedup-clean.fi","./data/fi/paracrawl-release1.en-fi.zipporah0-dedup-clean.en","fi","en")'
@@ -133,27 +133,17 @@ cat ./data/fi/* > ./data/en-fi-concat
 
 python -c 'import processor; processor.complete_process("./data/en-fi-concat","fi","en", "fi-en.train")'
 
-python -c 'import processor; processor.byte_encode("./fi-en.train_fi","fi-en.train.fi")'
-
-python -c 'import processor; processor.byte_encode("./fi-en.train_en","fi-en.train.en")'
 #### ESTONIAN ####
 
 python -c 'import processor; processor.file_combine("./data/et/europarl-v7.et-en.et","./data/et/europarl-v7.et-en.en","et","en")'
+
 rm ./data/et/europarl-v7.et-en.en
 rm ./data/et/europarl-v7.et-en.et
-
-python -c 'import processor; processor.file_combine("./data/et/paracrawl-release1.en-et.zipporah0-dedup-clean.et","./data/et/paracrawl-release1.en-et.zipporah0-dedup-clean.en","et","en", "data/et/et-en-paracrawl.combine")'
-
-rm ./data/et/paracrawl-release1.en-et.zipporah0-dedup-clean.et
-rm ./data/et/paracrawl-release1.en-et.zipporah0-dedup-clean.en
 
 cat ./data/et/* > ./data/en-et-concat
 
 python -c 'import processor; processor.complete_process("./data/en-et-concat","et","en", "et-en.train")'
 
-python -c 'import processor; processor.byte_encode("./et-en.train_et","et-en.train.et")'
-
-python -c 'import processor; processor.byte_encode("./et-en.train_en","et-en.train.en")'
 
 #### HINDI #####
 
@@ -165,24 +155,18 @@ cat ./data/hi/* > ./data/en-hi-concat
 
 python -c 'import processor; processor.complete_process("./data/en-hi-concat","hi","en", "hi-en.train")'
 
-python -c 'import processor; processor.byte_encode("./hi-en.train_hi","hi-en.train.hi")'
-
-python -c 'import processor; processor.byte_encode("./hi-en.train_en","hi-en.train.en")'
-
 ## Hindi Valid/Dev data
-python -c 'import processor; processor.file_combine("./data/hi/dev_test/dev.hi","./data/hi/dev_test/dev.en","hi","en","data/hi/hi-en.dev)'
+python -c 'import processor; processor.file_combine("./data/hi-valid/dev_test/dev.hi","./data/hi-valid/dev_test/dev.en","hi","en","./data/hi-valid/hi-en.dev")'
 
-cat ./data/hi/hi-en.dev > ./data/en-hi-dev-concat
-
-python -c 'import processor; processor.file_split("./data/en-hi-dev-concat","hi","en", "hi-en.valid_hi", "hi-en.valid_en")'
+python -c 'import processor; processor.file_split("./data/hi-valid/hi-en.dev","hi","en", "./data/hi-valid/valid-hi-en.hi", "./data/hi-valid/valid-hi-en.en")'
 
 ### Hindi Test Data
 
-python -c 'import processor; processor.file_combine("./data/hi/dev_test/test.hi","./data/hi/dev_test/test.en","hi","en","data/hi/hi-en.test")'
+python -c 'import processor; processor.file_combine("./data/hi-valid/dev_test/test.hi","./data/hi-valid/dev_test/test.en","hi","en","data/hi-valid/hi-en.test")'
 
-cat ./data/hi/hi-en.test > ./data/en-hi-test-concat
+cat ./data/hi-valid/hi-en.test > ./data/en-hi-test-concat
 
-python -c 'import processor; processor.file_split("./data/en-hi-test-concat","hi","en", "hi-en.test_hi", "hi-en.test_en")'
+python -c 'import processor; processor.file_split("./data/en-hi-test-concat","hi","en", "./data/hi-en.test_hi", "./data/hi-en.test_en")'
 
 ##rm -r ./data/hi/parallel
 
@@ -191,13 +175,22 @@ python -c 'import processor; processor.file_split("./data/en-hi-test-concat","hi
 cat ./data/gu/* > ./data/en-gu-concat
 python -c 'import processor; processor.complete_process("./data/en-gu-concat","gu","en", "gu-en.train")'
 
-python -c 'import processor; processor.byte_encode("./gu-en.train_gu","gu-en.train.gu")'
-
-python -c 'import processor; processor.byte_encode("./gu-en.train_en","gu-en.train.en")'
-
 ### NEPALI ###
 
-python -c 'import processor; processor.byte_encode("./ne-en.train_ne","ne-en.train.ne")'
+mv ./ne-en.train_ne ./data/ne/ne-en.train_ne
+mv ./ne-en.train_en ./data/ne/ne-en.train_en
 
-python -c 'import processor; processor.byte_encode("./ne-en.train_en","ne-en.train.en")'
 
+#BYTE ENCODE TRAIN/VALID FILES
+
+for SRC in "${SRCS[@]}"; do
+    python -c "import processor; processor.byte_encode('./data/${SRC}/${SRC}-en.train_${SRC}','./data/${SRC}/${SRC}-en.train.${SRC}')"
+
+    python -c "import processor; processor.byte_encode('./data/${SRC}/${SRC}-en.train_en','./data/${SRC}/${SRC}-en.train.en')"
+done
+
+for SRC in "${SRCS[@]}"; do
+    python -c "import processor; processor.byte_encode('./data/${SRC}-valid/valid-${SRC}-en.${SRC}','./data/${SRC}-valid/${SRC}-en.valid.${SRC}')"
+
+    python -c "import processor; processor.byte_encode('./data/${SRC}-valid/valid-${SRC}-en.en','./data/${SRC}-valid/${SRC}-en.valid.en')"
+done
