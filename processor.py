@@ -1,14 +1,10 @@
 import time
+import random
 #auxiliary functions for processing text files
 
 #Requirements:
 
 #A folder named data with different folders for the languages using ISO codes, functions will create different temp files in this directory
-
-
-
-
-#Global Variables
 
 alpha_ratio = 0.3
 
@@ -137,25 +133,9 @@ def remove_repeats(src, tgt, lang1, lang2, file_src=None, file_tgt=None):
     source.close()
     target.close()
     return file_src, file_tgt
-def remove_nonalpha(src, tgt, lang1, lang2):
-    """
-    Check if ratio of non-alpha characters to alpha characters is more than alpha ratio, if so then remove it!
-    
-    """
-    source = open("{}-{}.{}".format(lang1,lang2,lang1), "x")
-    target = open("{}-{}.{}".format(lang1,lang2,lang2), "x")
-    try:
-        f1 = open(src, "r")
-        f2 = open(tgt, "r")
-    except:
-        raise ValueError('Could not open source and target files!')
-        
-    for sr, tg in zip(f1.readlines(), f2.readlines()):
-        source_words = sr.strip.split(" ")
-        target_words = tg.strip.split(" ")
- 
  
 def byte_encode(file, prefix=None):
+    #put a space token between words
     bfile = open("{}-byte-encoded".format(prefix), "x")
     with open(file, "r") as f:
         for line in f.readlines():
@@ -181,17 +161,31 @@ def byte_decode(file, prefix=None):
                 bfile.write(" ")
             bfile.write("\n")
 
-def temperature_sampling(files, file_sizes, total, temp=1.5):
-    ratios = []
+def temperature_sampling(file_names,file_sizes, total, temp=1.5):
+    sentences = []
     d_total = sum(file_sizes)
+    if total==None:
+        total = d_total
     
-    for i,file in enumerate(files):
+    for i in range(len(file_sizes)):
         q = file_sizes[i]/d_total
         p = (q**(1/temp))/sum([(file_sizes[i]/d_total)**(1/temp) for i in range(len(file_sizes))])
-        ratio = int(p*total)/file_sizes[i]
-        ratios.append(ratio)
-    return ratios
-    
+        num_sent = int(p*total)
+        sentences.append(num_sent)
+    for i, file in enumerate(file_names):
+        res =open("{}-sampled".format(file), "x")
+        if sentences[i] < file_sizes[i]:
+            lines = random.sample(open(file, 'r').readlines(), sentences[i])
+            for line in lines:
+                res.write(line)
+        else:
+            #need to upsample
+            ratio = int(sentences[i]/file_sizes[i])
+            for j in range(ratio):
+                with open(file, "r") as f:
+                    for line in f:
+                        res.write(line)
+
 def complete_process(concat_file, src, tgt, file_prefix=None):
     if file_prefix:
         file_src = "./data-scrap/" + file_prefix + "_{}_split".format(src)
@@ -200,8 +194,8 @@ def complete_process(concat_file, src, tgt, file_prefix=None):
         rm_src = "./data-scrap/"+file_prefix + "_{}_equal".format(src)
         rm_tgt =  "./data-scrap/"+file_prefix + "_{}_equal".format(tgt)
         
-        rr_src = file_prefix + "_{}".format(src)
-        rr_tgt =  file_prefix + "_{}".format(tgt)
+        rr_src = "./data/"+src+"/"+file_prefix + "_{}".format(src)
+        rr_tgt =  "./data/"+src+"/"+file_prefix + "_{}".format(tgt)
         source, target = file_split(concat_file, src, tgt, file_src, file_tgt)
         source_re, target_re = remove_equal(source, target, src, tgt, rm_src, rm_tgt)
         source_rr, target_rr = remove_repeats(source_re, target_re, src, tgt, rr_src, rr_tgt)
@@ -210,9 +204,15 @@ def complete_process(concat_file, src, tgt, file_prefix=None):
 
         source_re, target_re = remove_equal(source, target, src, tgt)
         source_rr, target_rr = remove_repeats(source_re, target_re, src, tgt)
-    print("Cleaning suite complete!")
+    print("Cleaning suite for {}-{} complete!".format(src, tgt))
     
-#TEST COMMANDS: complete cleaning suite works :)
+    
+    
+#TEST COMMANDS
+
+#byte_encode("./ne-en.train_en", "ne-train")
+#byte_decode("./ne-train-byte-encoded", "ne-train")
+
 #file_combine("./data/fi/paracrawl-clean.fi","./data/fi/paracrawl-clean.en","fi","en")
 
 #start_time = time.time()
@@ -223,4 +223,20 @@ def complete_process(concat_file, src, tgt, file_prefix=None):
 #print("Entire cleaning took {} seconds".format(end_time - start_time))
 
 #"./data/fi/paracrawl-release1.en-fi.zipporah0-dedup-clean.fi","./data/fi/paracrawl-release1.en-fi.zipporah0-dedup-clean.en","fi","en"
-
+#
+#def remove_nonalpha(src, tgt, lang1, lang2):
+#    """
+#    Check if ratio of non-alpha characters to alpha characters is more than alpha ratio, if so then remove it!
+#
+#    """
+#    source = open("{}-{}.{}".format(lang1,lang2,lang1), "x")
+#    target = open("{}-{}.{}".format(lang1,lang2,lang2), "x")
+#    try:
+#        f1 = open(src, "r")
+#        f2 = open(tgt, "r")
+#    except:
+#        raise ValueError('Could not open source and target files!')
+#
+#    for sr, tg in zip(f1.readlines(), f2.readlines()):
+#        source_words = sr.strip.split(" ")
+#        target_words = tg.strip.split(" ")
