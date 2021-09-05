@@ -85,8 +85,8 @@ tail -n +4 ./multi.en.bpe32k/sentencepiece.bpe.vocab | cut -f1 | sed 's/$/ 100/g
 
 for SRC in "${SRCS[@]}"; do
     fairseq-preprocess --source-lang ${SRC} --target-lang en \
-        --trainpref ./data/train.bpe.${SRC}-en \
-        --validpref ./data/valid.bpe.${SRC}-en \
+        --trainpref $DATA/train.bpe.${SRC}-en \
+        --validpref $DATA/valid.bpe.${SRC}-en \
         --tgtdict fairseq-multi-en.vocab \
         --destdir data-bin/multi-en.bpe32k/ \
         --workers 10
