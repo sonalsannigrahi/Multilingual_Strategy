@@ -106,8 +106,8 @@ CUDA_VISIBLE_DEVICES=0 fairseq-train data-bin/multi-en.byte32k/ \
  --sampling-temperature 1.5 \
  --encoder-langtok "src" \
  --decoder-langtok \
- --lang-dict "$lang_list" \
- --lang-pairs "$lang_pairs" \
+ --lang-dict "lang.txt" \
+ --lang-pairs fi-en,ne-en,et-en,hi-en,gu-en \
  --criterion label_smoothed_cross_entropy --label-smoothing 0.2 \
  --optimizer adam --adam-eps 1e-06 --adam-betas '(0.9, 0.98)' \
  --lr-scheduler inverse_sqrt --lr 3e-05 --warmup-updates 2500 --max-update 40000 \
