@@ -156,19 +156,41 @@ def remove_nonalpha(src, tgt, lang1, lang2):
  
  
 def byte_encode(file, prefix=None):
-    #put a space token between words
     bfile = open("{}-byte-encoded".format(prefix), "x")
     with open(file, "r") as f:
         for line in f.readlines():
             line_split = line.split(" ")
-            for word in line_split:
-                arr = bytes(word, 'utf-8')
-                #arr2 = bytes(string, 'ascii')
-                for byte in arr:
-                    bfile.write(str(byte))
+            for words in line_split:
+                arr = list(bytes(words, 'utf-8'))
+                for byt in arr:
+                    bfile.write(str(byt))
                     bfile.write(" ")
                 bfile.write("▁")
             bfile.write("\n")
+
+def byte_decode(file, prefix=None):
+    bfile = open("{}-byte-decoded".format(prefix), "x")
+    with open(file, "r") as f:
+        for line in f.readlines():
+            line_split = line.split("▁")
+            for lines in line_split[:-1]:
+                lines = lines.strip("\n").split(" ")[:-1]
+                lines = [int(string) for string in lines]
+                word = bytes(lines).decode('utf-8')
+                bfile.write(word)
+                bfile.write(" ")
+            bfile.write("\n")
+
+def temperature_sampling(files, file_sizes, total, temp=1.5):
+    ratios = []
+    d_total = sum(file_sizes)
+    
+    for i,file in enumerate(files):
+        q = file_sizes[i]/d_total
+        p = (q**(1/temp))/sum([(file_sizes[i]/d_total)**(1/temp) for i in range(len(file_sizes))])
+        ratio = int(p*total)/file_sizes[i]
+        ratios.append(ratio)
+    return ratios
     
 def complete_process(concat_file, src, tgt, file_prefix=None):
     if file_prefix:
