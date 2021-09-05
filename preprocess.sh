@@ -194,3 +194,19 @@ for SRC in "${SRCS[@]}"; do
 
     python -c "import processor; processor.byte_encode('./data/${SRC}-valid/valid-${SRC}-en.en','./data/${SRC}-valid/${SRC}-en.valid.en')"
 done
+
+#TEMP SAMPLING
+
+#compute number of sentences
+
+HI=$(wc -l < ./data/hi/hi-en.train_hi)
+FI=$(wc -l < ./data/fi/fi-en.train_fi)
+GU=$(wc -l < ./data/gu/gu-en.train_gu)
+NE=$(wc -l < ./data/ne/ne-en.train_ne)
+ET=$(wc -l < ./data/et/et-en.train_et)
+
+#source sampling
+python -c "import processor; processor.temperature_sampling(['./data/hi/hi-en.train_hi','./data/fi/fi-en.train_fi','./data/gu/gu-en.train_gu','./data/ne/ne-en.train_ne','./data/et/et-en.train_et'],[${HI}, ${FI}, ${GU}, ${NE}, ${ET}],None,5)"
+
+#target sampling
+python -c "import processor; processor.temperature_sampling(['./data/hi/hi-en.train_en','./data/fi/fi-en.train_en','./data/gu/gu-en.train_en','./data/ne/ne-en.train_en','./data/et/et-en.train_en'],[${HI}, ${FI}, ${GU}, ${NE}, ${ET}],None,5)"
