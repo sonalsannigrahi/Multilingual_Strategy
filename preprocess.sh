@@ -181,20 +181,6 @@ mv ./ne-en.train_ne ./data/ne/ne-en.train_ne
 mv ./ne-en.train_en ./data/ne/ne-en.train_en
 
 
-#BYTE ENCODE TRAIN/VALID FILES
-
-for SRC in "${SRCS[@]}"; do
-    python -c "import processor; processor.byte_encode('./data/${SRC}/${SRC}-en.train_${SRC}','./data/${SRC}/${SRC}-en.train.${SRC}')"
-
-    python -c "import processor; processor.byte_encode('./data/${SRC}/${SRC}-en.train_en','./data/${SRC}/${SRC}-en.train.en')"
-done
-
-for SRC in "${SRCS[@]}"; do
-    python -c "import processor; processor.byte_encode('./data/${SRC}-valid/valid-${SRC}-en.${SRC}','./data/${SRC}-valid/${SRC}-en.valid.${SRC}')"
-
-    python -c "import processor; processor.byte_encode('./data/${SRC}-valid/valid-${SRC}-en.en','./data/${SRC}-valid/${SRC}-en.valid.en')"
-done
-
 #TEMP SAMPLING
 
 #compute number of sentences
@@ -210,3 +196,18 @@ python -c "import processor; processor.temperature_sampling(['./data/hi/hi-en.tr
 
 #target sampling
 python -c "import processor; processor.temperature_sampling(['./data/hi/hi-en.train_en','./data/fi/fi-en.train_en','./data/gu/gu-en.train_en','./data/ne/ne-en.train_en','./data/et/et-en.train_en'],[${HI}, ${FI}, ${GU}, ${NE}, ${ET}],None,5)"
+
+
+#BYTE ENCODE TRAIN/VALID FILES
+
+for SRC in "${SRCS[@]}"; do
+    python -c "import processor; processor.byte_encode('./data/${SRC}/${SRC}-en.train_${SRC}-sampled','./data/${SRC}/${SRC}-en.train.${SRC}')"
+
+    python -c "import processor; processor.byte_encode('./data/${SRC}/${SRC}-en.train_en-sampled','./data/${SRC}/${SRC}-en.train.en')"
+done
+
+for SRC in "${SRCS[@]}"; do
+    python -c "import processor; processor.byte_encode('./data/${SRC}-valid/valid-${SRC}-en.${SRC}','./data/${SRC}-valid/${SRC}-en.valid.${SRC}')"
+
+    python -c "import processor; processor.byte_encode('./data/${SRC}-valid/valid-${SRC}-en.en','./data/${SRC}-valid/${SRC}-en.valid.en')"
+done
