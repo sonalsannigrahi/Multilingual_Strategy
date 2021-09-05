@@ -39,7 +39,7 @@ DATAC=./multi.en.char32k
 
 mkdir -p "$DATAC"
 #learn char tokenisation
-TRAIN_FILES=$(for SRC in "${SRCS[@]}"; do echo ./${SRC}-${TGT}.train_${SRC}; echo ./${SRC}-${TGT}.train_${TGT}; done | tr "\n" ",")
+TRAIN_FILES=$(for SRC in "${SRCS[@]}"; do echo ./data/${SRC}/${SRC}-${TGT}.train_${SRC}-sampled; echo ./data/${SRC}/${SRC}-${TGT}.train_${TGT}-sampled; done | tr "\n" ",")
 echo "learning joint char over ${TRAIN_FILES}..."
 python "$SPM_TRAIN" \
     --input=$TRAIN_FILES \
@@ -53,7 +53,7 @@ for SRC in "${SRCS[@]}"; do
     python "$SPM_ENCODE" \
         --model "$DATAC/sentencepiece.char.model" \
         --output_format=piece \
-        --inputs ./${SRC}-${TGT}.train_${SRC} ./${SRC}-${TGT}.train_${TGT} \
+        --inputs ./${SRC}-${TGT}.train_${SRC}-sampled ./${SRC}-${TGT}.train_${TGT}-sampled \
         --outputs ./data/train.char.${SRC}-${TGT}.${SRC} ./data/train.char.${SRC}-${TGT}.${TGT} \
         --min-len $TRAIN_MINLEN --max-len $TRAIN_MAXLEN
 done
@@ -90,27 +90,24 @@ done
 #   TRAINING    #
 #################
 
+mkdir -p checkpoints/multilingual_transformer_char
 
-##BPE MODEL
-#mkdir -p checkpoints/multilingual_transformer
-#
-#
-#CUDA_VISIBLE_DEVICES=0 fairseq-train data-bin/multi-en.bpe32k/ \
-#  --encoder-normalize-before --decoder-normalize-before \
-#  --arch transformer --layernorm-embedding \
-#  --task translation_multi_simple_epoch \
-#  --sampling-method "temperature" \
-#  --sampling-temperature 1.5 \
-#  --encoder-langtok "src" \
-#  --decoder-langtok \
-#  --lang-dict "$lang_list" \
-#  --lang-pairs "$lang_pairs" \
-#  --criterion label_smoothed_cross_entropy --label-smoothing 0.2 \
-#  --optimizer adam --adam-eps 1e-06 --adam-betas '(0.9, 0.98)' \
-#  --lr-scheduler inverse_sqrt --lr 3e-05 --warmup-updates 2500 --max-update 40000 \
-#  --dropout 0.3 --attention-dropout 0.1 --weight-decay 0.0 \
-#  --max-tokens 1024 --update-freq 2 \
-#  --save-interval 1 --save-interval-updates 5000 --keep-interval-updates 10\
-#  --save-dir checkpoints/multilingual_transformer \
-#  --seed 222 --log-format simple --log-interval 2
+CUDA_VISIBLE_DEVICES=0 fairseq-train data-bin/multi-en.char32k/ \
+ --encoder-normalize-before --decoder-normalize-before \
+ --arch transformer --layernorm-embedding \
+ --task translation_multi_simple_epoch \
+ --sampling-method "temperature" \
+ --sampling-temperature 1.5 \
+ --encoder-langtok "src" \
+ --decoder-langtok \
+ --lang-dict "$lang_list" \
+ --lang-pairs "$lang_pairs" \
+ --criterion label_smoothed_cross_entropy --label-smoothing 0.2 \
+ --optimizer adam --adam-eps 1e-06 --adam-betas '(0.9, 0.98)' \
+ --lr-scheduler inverse_sqrt --lr 3e-05 --warmup-updates 2500 --max-update 40000 \
+ --dropout 0.3 --attention-dropout 0.1 --weight-decay 0.0 \
+ --max-tokens 1024 --update-freq 2 \
+ --save-interval 1 --save-interval-updates 5000 --keep-interval-updates 10\
+ --save-dir checkpoints/multilingual_transformer_char \
+ --seed 222 --log-format simple --log-interval 2
 
