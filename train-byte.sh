@@ -40,7 +40,7 @@ DATA=./multi.en.byte32k
 mkdir -p "$DATA"
 
 # learn byte-encoding with sentencepiece
-TRAIN_FILES=$(for SRC in "${SRCS[@]}"; do echo ./${SRC}-${TGT}.train.${TGT}-byte-encoded; echo ./${SRC}-${TGT}.train.${TGT}-byte-encoded; done | tr "\n" ",")
+TRAIN_FILES=$(for SRC in "${SRCS[@]}"; do echo ./data/${SRC}/${SRC}-${TGT}.train.${SRC}-byte-encoded; echo ./data/${SRC}/${SRC}-${TGT}.train.${TGT}-byte-encoded; done | tr "\n" ",")
 echo "learning joint byte model over ${TRAIN_FILES}..."
 python "$SPM_TRAIN" \
     --input=$TRAIN_FILES \
@@ -55,7 +55,7 @@ for SRC in "${SRCS[@]}"; do
     python "$SPM_ENCODE" \
         --model "$DATA/sentencepiece.byte.model" \
         --output_format=piece \
-        --inputs ./data/${SRC}/${SRC}-${TGT}.train.${TGT}-byte-encoded ./data/${SRC}/${SRC}-${TGT}.train.${TGT}-byte-encoded \
+        --inputs ./data/${SRC}/${SRC}-${TGT}.train.${SRC}-byte-encoded ./data/${SRC}/${SRC}-${TGT}.train.${TGT}-byte-encoded \
         --outputs $DATA/train.byte.${SRC}-${TGT}.${SRC} $DATA/train.byte.${SRC}-${TGT}.${TGT} \
         --min-len $TRAIN_MINLEN --max-len $TRAIN_MAXLEN
 done
@@ -67,7 +67,7 @@ for ((i=0;i<${#SRCS[@]};++i)); do
     python "$SPM_ENCODE" \
         --model "$DATA/sentencepiece.byte.model" \
         --output_format=piece \
-        --inputs ./data/${SRC}-valid/${SRC}-${TGT}.valid.${TGT}-byte-encoded ./data/${SRC}-valid/${SRC}-${TGT}.valid.${TGT}-byte-encoded \
+        --inputs ./data/${SRC}-valid/${SRC}-${TGT}.valid.${SRC}-byte-encoded ./data/${SRC}-valid/${SRC}-${TGT}.valid.${TGT}-byte-encoded \
         --outputs $DATA/valid.byte.${SRC}-${TGT}.${SRC} $DATA/valid.byte.${SRC}-${TGT}.${TGT}
 done
 

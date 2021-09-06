@@ -1,10 +1,10 @@
 #!/bin/sh
 
 #  train-char.sh
-#  
+#
 #
 #  Created by Sonal Sannigrahi on 20/08/2021.
-#  
+#
 
 export PATH=/opt/homebrew/bin:$PATH
 
@@ -24,7 +24,6 @@ TRAIN_MINLEN=1  # remove sentences with <1 token
 TRAIN_MAXLEN=250  # remove sentences with >250 tokens
 
 export PYTHONPATH="$(pwd)"
-
 
 #####################
 #   TOKENISATION    #
@@ -53,8 +52,8 @@ for SRC in "${SRCS[@]}"; do
     python "$SPM_ENCODE" \
         --model "$DATAC/sentencepiece.char.model" \
         --output_format=piece \
-        --inputs ./${SRC}-${TGT}.train_${SRC}-sampled ./${SRC}-${TGT}.train_${TGT}-sampled \
-        --outputs $DATA/train.char.${SRC}-${TGT}.${SRC} $DATA/train.char.${SRC}-${TGT}.${TGT} \
+        --inputs ./data/${SRC}/${SRC}-${TGT}.train_${SRC}-sampled ./data/${SRC}/${SRC}-${TGT}.train_${TGT}-sampled \
+        --outputs $DATAC/train.char.${SRC}-${TGT}.${SRC} $DATAC/train.char.${SRC}-${TGT}.${TGT} \
         --min-len $TRAIN_MINLEN --max-len $TRAIN_MAXLEN
 done
 
@@ -62,10 +61,10 @@ echo "encoding valid with learned char model..."
 for ((i=0;i<${#SRCS[@]};++i)); do
     SRC=${SRCS[i]}
     python "$SPM_ENCODE" \
-        --model "$DATA/sentencepiece.char.model" \
+        --model "$DATAC/sentencepiece.char.model" \
         --output_format=piece \
         --inputs ./data/${SRC}-valid/valid-${SRC}-${TGT}.${SRC} ./data/${SRC}-valid/valid-${SRC}-${TGT}.${TGT} \
-        --outputs $DATA/valid.char.${SRC}-${TGT}.${SRC} $DATA/valid.char.${SRC}-${TGT}.${TGT}
+        --outputs $DATAC/valid.char.${SRC}-${TGT}.${SRC} $DATAC/valid.char.${SRC}-${TGT}.${TGT}
 done
 
 ####################
@@ -79,8 +78,8 @@ tail -n +4 ./multi.en.char32k/sentencepiece.char.vocab | cut -f1 | sed 's/$/ 100
 
 for SRC in "${SRCS[@]}"; do
     fairseq-preprocess --source-lang ${SRC} --target-lang en \
-        --trainpref $DATA/train.char.${SRC}-en \
-        --validpref $DATA/valid.char.${SRC}-en \
+        --trainpref $DATAC/train.char.${SRC}-en \
+        --validpref $DATAC/valid.char.${SRC}-en \
         --tgtdict fairseq-multi-en-char.vocab \
         --destdir data-bin/multi-en.char32k/ \
         --workers 10
@@ -110,7 +109,7 @@ mkdir -p checkpoints/multilingual_transformer_char
 #  --save-interval 1 --save-interval-updates 5000 --keep-interval-updates 10\
 #  --save-dir checkpoints/multilingual_transformer_char \
 #  --seed 222 --log-format simple --log-interval 2
-
+#
 CUDA_VISIBLE_DEVICES=0 fairseq-train data-bin/multi-en.char32k/ \
     --task multilingual_translation --lang-pairs fi-en,ne-en,et-en,hi-en,gu-en \
     --arch multilingual_transformer_iwslt_de_en \
