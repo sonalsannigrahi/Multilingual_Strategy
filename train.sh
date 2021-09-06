@@ -122,7 +122,6 @@ mkdir -p checkpoints/multilingual_transformer
 #   --seed 222 --log-format simple --log-interval 2
 
 CUDA_VISIBLE_DEVICES=0 fairseq-train data-bin/multi-en.bpe32k/ \
-    --max-epoch 50 \
     --task multilingual_translation --lang-pairs fi-en,ne-en,et-en,hi-en,gu-en \
     --arch multilingual_transformer_iwslt_de_en \
     --share-decoders --share-decoder-input-output-embed \
