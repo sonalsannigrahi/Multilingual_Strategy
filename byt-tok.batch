@@ -17,12 +17,9 @@ echo "### Running $SLURM_JOB_NAME ###"
 set -x
 cd ${SLURM_SUBMIT_DIR}
 
-module purge
-module load cuda/11.1
 
-# Set your conda environment
-source /home/$USER/.bashrc
-# tensorflow environment shloud be created previously
-source activate pt_env
+export PATH=/scratch/ssannigr/miniconda3/bin:$PATH
+module purge
+module load cuda/11.4.0
 
 sh train-byte.sh

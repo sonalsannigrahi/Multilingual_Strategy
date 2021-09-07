@@ -1,3 +1,4 @@
+# coding=utf-8
 import time
 import random
 #auxiliary functions for processing text files
@@ -16,9 +17,9 @@ def file_combine(filesrc, filetgt, src, tgt, file_name=None):
     this function combines them into source \t target
     """
     if file_name:
-        combined = open(file_name, "x")
+        combined = open(file_name, "w+")
     else:
-        combined = open("data/{}/{}-{}.combine".format(src,src,tgt), "x")
+        combined = open("data/{}/{}-{}.combine".format(src,src,tgt), "w+")
         file_name ="data/{}/{}-{}.combine".format(src,src,tgt)
     i= 0
     try:
@@ -42,12 +43,12 @@ def file_split(file, src, tgt, file_name_src=None, file_name_tgt=None):
     this function splits them into source and target files
     """
     if file_name_src:
-        source = open(file_name_src, "x")
-        target = open(file_name_tgt, "x")
+        source = open(file_name_src, "w+")
+        target = open(file_name_tgt, "w+")
     else:
-        source = open("data/{}/{}-{}.split.{}".format(src,src,tgt,src), "x")
+        source = open("data/{}/{}-{}.split.{}".format(src,src,tgt,src), "w+")
         file_name_src = "data/{}/{}-{}.split.{}".format(src,src,tgt,src)
-        target = open("data/{}/{}-{}.split.{}".format(src,src,tgt,tgt), "x")
+        target = open("data/{}/{}-{}.split.{}".format(src,src,tgt,tgt), "w+")
         file_name_tgt = "data/{}/{}-{}.split.{}".format(src,src,tgt,tgt)
     i= 0
     with open(file, "r") as f:
@@ -69,12 +70,12 @@ def remove_equal(src, tgt, lang1, lang2, file_name_src=None, file_name_tgt=None)
     This tries to take into account proper nouns that remain the same or phrases that are borrowed from english
     """
     if file_name_src:
-        source = open(file_name_src, "x")
-        target = open(file_name_tgt, "x")
+        source = open(file_name_src, "w+")
+        target = open(file_name_tgt, "w+")
     else:
-        source = open("data/{}/{}-{}.clean.{}".format(lang1,lang1,lang2,lang1), "x")
+        source = open("data/{}/{}-{}.clean.{}".format(lang1,lang1,lang2,lang1), "w+")
         file_name_src = "data/{}/{}-{}.clean.{}".format(lang1,lang1,lang2,lang1)
-        target = open("data/{}/{}-{}.clean.{}".format(lang1,lang1, lang2, lang2), "x")
+        target = open("data/{}/{}-{}.clean.{}".format(lang1,lang1, lang2, lang2), "w+")
         file_name_tgt ="data/{}/{}-{}.clean.{}".format(lang1,lang1, lang2, lang2)
     try:
         f1 = open(src, "r")
@@ -100,15 +101,15 @@ def remove_repeats(src, tgt, lang1, lang2, file_src=None, file_tgt=None):
     Given source and target files, removes repeating source-target translations [deduplication]
     """
     if file_src:
-        source = open(file_src, "x")
+        source = open(file_src, "w+")
     elif file_src==None:
-        source = open("data/{}-{}-complete.{}".format(lang1,lang2,lang1), "x")
+        source = open("data/{}-{}-complete.{}".format(lang1,lang2,lang1), "w+")
         file_src = "data/{}-{}-complete.{}".format(lang1,lang2,lang1)
         
     if file_tgt:
-        target = open(file_tgt, "x")
+        target = open(file_tgt, "w+")
     elif file_tgt==None:
-        target = open("data/{}-{}-complete.{}".format(lang1,lang2,lang2), "x")
+        target = open("data/{}-{}-complete.{}".format(lang1,lang2,lang2), "w+")
         file_tgt = "data/{}-{}-complete.{}".format(lang1,lang2,lang2)
         
     try:
@@ -136,7 +137,7 @@ def remove_repeats(src, tgt, lang1, lang2, file_src=None, file_tgt=None):
  
 def byte_encode(file, prefix=None):
     #put a space token between words
-    bfile = open("{}-byte-encoded".format(prefix), "x")
+    bfile = open("{}-byte-encoded".format(prefix), "w+")
     with open(file, "r") as f:
         for line in f.readlines():
             line_split = line.split(" ")
@@ -149,7 +150,7 @@ def byte_encode(file, prefix=None):
             bfile.write("\n")
 
 def byte_decode(file, prefix=None):
-    bfile = open("{}-byte-decoded".format(prefix), "x")
+    bfile = open("{}-byte-decoded".format(prefix), "w+")
     with open(file, "r") as f:
         for line in f.readlines():
             line_split = line.split("▁")
@@ -173,7 +174,7 @@ def temperature_sampling(file_names,file_sizes, total, temp=1.5):
         num_sent = int(p*total)
         sentences.append(num_sent)
     for i, file in enumerate(file_names):
-        res =open("{}-sampled".format(file), "x")
+        res =open("{}-sampled".format(file), "w+")
         if sentences[i] < file_sizes[i]:
             lines = random.sample(open(file, 'r').readlines(), sentences[i])
             for line in lines:
