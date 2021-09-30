@@ -33,3 +33,24 @@ $ sbatch bpe-tok.batch
 ```
 
 ## Evaluation Scripts
+
+
+
+----
+
+New scripts:
+
+Download raw data (produces $pair/{train,dev,test}.$pair.final.{src,trg}
+```
+bash new-scripts/get_data.sh
+```
+
+Preprocess data sets (normalisation, filtering, deduplication, segmentation (bpe, char, bytes), binarisation
+```
+bash new-scripts/process_data.sh
+```
+
+Train a model
+```
+sbatch new-scripts/train-bpe.slurm
+```
