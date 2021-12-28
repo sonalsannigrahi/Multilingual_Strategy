@@ -50,7 +50,19 @@ Preprocess data sets (normalisation, filtering, deduplication, segmentation (bpe
 bash new-scripts/process_data.sh
 ```
 
-Train a model
+Train a model (Rachel's runs)
 ```
-sbatch new-scripts/train-bpe.slurm
+cd cd models/et-fi-gu-hi-ne2en/sp48k-tmp1.2/{1,2,3}
+sbatch train-bpe.slurm
+```
+
+Generate the validation sets from each checkpoint (after each epoch):
+```
+sbatch generate-valid.slurm
+```
+The outputs are saved to `model-bpe/valid_outputs/checkpointEPOCH.pt.postproc.ne-en`, where `EPOCH` is the epoch number.
+
+Score each generated validation file and produce a tab-separated results table:
+````
+python ../../../../new-scripts/score-all-epochs-valid.py model-bpe ../../../../data/
 ```
