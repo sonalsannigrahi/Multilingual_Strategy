@@ -12,8 +12,9 @@ databindir="$datadir/bin"
 export PYTHONPATH="$PYTHONPATH:$thisdir"
 
 PAIRS=('gu-en' 'et-en' 'hi-en' 'ne-en' 'fi-en')
-BPESIZES="32000"  #"24000 32000" # possibility to add more
-BPELANGS="en-et-fi-gu-hi-ne"  #"et-fi-gu-hi-ne en-et-fi-gu-hi-ne en" # different combinations for joint BPE
+BPESIZES="48000 32000 24000 16000" # possibility to add more
+TEMPS="1.2 1.5 1.8"
+BPELANGS="en-et-fi-gu-hi-ne"
 
 # 1. Finalise dataset by normalising (train, dev and test) and filtering/cleaning (train only)
 for pair in "${PAIRS[@]}"; do
@@ -53,130 +54,44 @@ for pair in "${PAIRS[@]}"; do
 done
 
 
-# 2. Prepare sampled dataset to train segmentation models (from final train set)
+# 2. Encode models with characters and bytes
 [ -d $datadir/sampled ] || mkdir $datadir/sampled
-# compute number of sentences
-declare -A total_all
-declare -A total_no_en
-for lang in hi fi gu ne et en; do
-    total_all[$lang]=$(cat $datadir/*$lang*/train.*$lang*.final.$lang | wc -l)
-    if [[ $lang != "en" ]]; then
-	total_no_en[$lang]=$(cat $datadir/*$lang*/train.*$lang*.final.$lang | wc -l)
-    fi
-    echo $lang, $(cat $datadir/*$lang*/train.*$lang*.final.$lang | wc -l)
-done
-
-# calculate how much data to sample for each language
-pair2number_all="{\"hi\": ${total_all[hi]}, \"fi\": ${total_all[fi]}, \"gu\": ${total_all[gu]}, \"ne\": ${total_all[ne]}, \"et\": ${total_all[et]}, \"en\": ${total_all[en]}}"
-python -c "import sampling; sampling.temperature_sampling_get_n($pair2number_all, temp=1.5)" \
-    > $datadir/sampled/sampling_per_language_all.txt
-
-echo $pair2number_all
-
-pair2number_no_en="{\"hi\": ${total_no_en[hi]}, \"fi\": ${total_no_en[fi]}, \"gu\": ${total_no_en[gu]}, \"ne\": ${total_no_en[ne]}, \"et\": ${total_no_en[et]}}"
-python -c "import sampling; sampling.temperature_sampling_get_n($pair2number_no_en, temp=1.5)" \
-    > $datadir/sampled/sampling_per_language_no_en.txt
-
-echo ">> Sampling the following percentage from each language to train the BPE models:"
-echo ">> All languages"
-cat $datadir/sampled/sampling_per_language_all.txt
-echo ">> All languages but English"
-cat $datadir/sampled/sampling_per_language_no_en.txt
-
-
-total=2500000 # total of 10M lines
-# go through all languages included and sample n sentences
-if [ ! -f $datadir/sampled/sampled.et-fi-gu-hi-ne ]; then
-    for lang in et fi gu hi ne; do
-	n=`cat $datadir/sampled/sampling_per_language_no_en.txt | grep $lang | cut -f 2`
-	n=`echo "$n*$total" | bc`
-	cat $datadir/*$lang*/train.*$lang*.final.$lang | \
-	    python -c "import sampling; sampling.sample_n($n, ${total_no_en[$lang]})" \
-	    >> $datadir/sampled/sampled.et-fi-gu-hi-ne	
-    done
-fi
-if [ ! -f $datadir/sampled/sampled.en-et-fi-gu-hi-ne ]; then
-    for lang in en et fi gu hi ne; do
-	n=`cat $datadir/sampled/sampling_per_language_all.txt | grep $lang | cut -f 2`
-	n=`echo "$n*$total" | bc`
-	cat $datadir/*$lang*/train.*$lang*.final.$lang | \
-	    python -c "import sampling; sampling.sample_n($n, ${total_all[$lang]})" \
-	    >> $datadir/sampled/sampled.en-et-fi-gu-hi-ne
-    done
-fi
-# get sample of English
-echo ">> Getting sampled English data"
-if [ ! -f $datadir/sampled/sampled.en ]; then
-    cat $datadir/*en*/train.*final.en | shuf | head -n $total > $datadir/sampled/sampled.en
-fi
-# encode sampled data as bytes and chars
-for seg in byte char; do
-    if [ ! -f $datadir/sampled/sampled.$BPELANGS.$seg ]; then
-	cat $datadir/sampled/sampled.$BPELANGS | python -c "import segment; segment.${seg}_encode()" \
-	    > $datadir/sampled/sampled.$BPELANGS.$seg
-    fi
-done
-
 [ -d $datadir/spm_models ] || mkdir $datadir/spm_models
-# train bpe models
-echo ">> Training sentencepiece models"
-for BPESIZE in $BPESIZES; do
-    for langs in $BPELANGS; do
-	if [ ! -f $datadir/spm_models/spm.$langs-$BPESIZE.model ]; then
-	    python $thisdir/spm_train.py \
-		--input=$datadir/sampled/sampled.$langs \
-		--model_prefix=$datadir/spm_models/spm.$langs-$BPESIZE \
-		--vocab_size=$BPESIZE \
-		--character_coverage=1.0 \
-		--model_type=bpe \
-		--num_threads=8 
-	fi
-    done
+
+[ ! -f $datadir/sampled/sampled.$BPELANGS ] || rm $datadir/sampled/sampled.$BPELANGS
+for lang in `echo $BPELANGS | perl -pe 's/-/ /g'`; do
+    cat $datadir/*$lang*/train.*$lang*.final.$lang >> $datadir/sampled/sampled.$BPELANGS
 done
 
-# char-based
-for langs in $BPELANGS; do
-    if [ ! -f $datadir/spm_models/spm.$langs-char.model ]; then
-        python $thisdir/spm_train.py \
-		--input=$datadir/sampled/sampled.$langs$suffix \
-	    --model_prefix=$datadir/spm_models/spm.$langs-char \
-	    --character_coverage=1.0 \
-	    --model_type=char \
-	    --num_threads=8
-    fi
-done
+# train char-based model
+if [ ! -f $datadir/spm_models/spm.$BPELANGS-char.model ]; then
+    python $thisdir/spm_train.py \
+	--input=$datadir/sampled/sampled.$BPELANGS \
+	--model_prefix=$datadir/spm_models/spm.$BPELANGS-char \
+	--character_coverage=1.0 \
+	--model_type=char \
+	--num_threads=8
+fi
 
-
-# encode files w/ bpe
-echo ">> Encoding files with BPE"
+# encode files w/ character encoding
+echo ">> Encoding files with char sentencepiece"
 for pair in "${PAIRS[@]}"; do
-    echo $pair
     for dset in train dev test; do
-	echo $dset
-	for BPESIZE in $BPESIZES char; do
-	    src=`echo $pair | cut -d'-' -f1`
-	    trg=`echo $pair | cut -d'-' -f2`
-	    if [[ "$BPESIZE" == "char" ]]; then
-		infix=$BPESIZE
-	    else
-		infix=$BPELANGS-$BPESIZE
-	    fi
-	    echo $infix
-	    for lang in $src $trg; do
-		if [[ $BPELANGS == *"$lang"* ]]; then
-		    if [ ! -f $datadir/$pair/$dset.$pair.final.$infix.$lang ]; then
-			python $thisdir/spm_encode.py \
-			    --model $datadir/spm_models/spm.$BPELANGS-$BPESIZE.model \
-			    --output_format=piece \
-			    --inputs $datadir/$pair/$dset.$pair.final.$lang \
-			    --outputs $datadir/$pair/$dset.$pair.final.$infix.$lang 
-		    fi
-		fi
-	    done
-	done
+        src=`echo $pair | cut -d'-' -f1`
+        trg=`echo $pair | cut -d'-' -f2`
+        for lang in $src $trg; do
+            if [[ $BPELANGS == *"$lang"* ]]; then
+                if [ ! -f $datadir/$pair/$dset.$pair.final.char.$lang ]; then
+                    python $thisdir/spm_encode.py \
+                        --model $datadir/spm_models/spm.char.model \
+                        --output_format=piece \
+                        --inputs $datadir/$pair/$dset.$pair.final.$lang \
+                        --outputs $datadir/$pair/$dset.$pair.final.char.$lang
+                fi
+            fi
+        done
     done
 done
-
 
 # encode files as bytes
 echo ">> Encoding files as bytes"
@@ -193,12 +108,129 @@ for pair in ${PAIRS[@]}; do
     done
 done
 
-# binarise (fairseq-preprocess)
+
+# 2. Prepare sampled dataset to train segmentation models (from final train set)
+# compute number of sentences
+declare -A total_all
+declare -A total_no_en
+for lang in hi fi gu ne et en; do
+    total_all[$lang]=$(cat $datadir/*$lang*/train.*$lang*.final.$lang | wc -l)
+    if [[ $lang != "en" ]]; then
+	total_no_en[$lang]=$(cat $datadir/*$lang*/train.*$lang*.final.$lang | wc -l)
+    fi
+    echo $lang, $(cat $datadir/*$lang*/train.*$lang*.final.$lang | wc -l)
+done
+
+
+# get sampled data to train sentencepiece models with different temperatures
+for TEMP in $TEMPS; do
+    # calculate how much data to sample for each language
+    pair2number_all="{\"hi\": ${total_all[hi]}, \"fi\": ${total_all[fi]}, \"gu\": ${total_all[gu]}, \"ne\": ${total_all[ne]}, \"et\": ${total_all[et]}, \"en\": ${total_all[en]}}"
+    if [ ! -f  $datadir/sampled/sampling_per_language_all_temp$TEMP.txt ]; then
+	python -c "import sampling; sampling.temperature_sampling_get_n($pair2number_all, temp=$TEMP)" \
+	    > $datadir/sampled/sampling_per_language_all_temp$TEMP.txt
+    fi
+
+    echo $pair2number_all
+    
+    pair2number_no_en="{\"hi\": ${total_no_en[hi]}, \"fi\": ${total_no_en[fi]}, \"gu\": ${total_no_en[gu]}, \"ne\": ${total_no_en[ne]}, \"et\": ${total_no_en[et]}}"
+    if [ ! -f $datadir/sampled/sampling_per_language_no_en_temp$TEMP.txt ]; then
+	python -c "import sampling; sampling.temperature_sampling_get_n($pair2number_no_en, temp=$TEMP)" \
+	    > $datadir/sampled/sampling_per_language_no_en_temp$TEMP.txt
+    fi
+
+
+    echo ">> Sampling the following percentage from each language to train the BPE models:"
+    echo ">> All languages"
+    cat $datadir/sampled/sampling_per_language_all_temp$TEMP.txt
+    echo ">> All languages but English"
+    cat $datadir/sampled/sampling_per_language_no_en_temp$TEMP.txt
+
+
+    total=2500000 # total of 10M lines
+    # go through all languages included and sample n sentences
+    if [ ! -f $datadir/sampled/sampled.et-fi-gu-hi-ne.temp$TEMP ]; then
+	for lang in et fi gu hi ne; do
+	    n=`cat $datadir/sampled/sampling_per_language_no_en_temp$TEMP.txt | grep $lang | cut -f 2`
+	    n=`echo "$n*$total" | bc`
+	    cat $datadir/*$lang*/train.*$lang*.final.$lang | \
+		python -c "import sampling; sampling.sample_n($n, ${total_no_en[$lang]})" \
+		>> $datadir/sampled/sampled.et-fi-gu-hi-ne.temp$TEMP	
+	done
+    fi
+    if [ ! -f $datadir/sampled/sampled.en-et-fi-gu-hi-ne.temp$TEMP ]; then
+	for lang in en et fi gu hi ne; do
+	    n=`cat $datadir/sampled/sampling_per_language_all_temp$TEMP.txt | grep $lang | cut -f 2`
+	    n=`echo "$n*$total" | bc`
+	    cat $datadir/*$lang*/train.*$lang*.final.$lang | \
+		python -c "import sampling; sampling.sample_n($n, ${total_all[$lang]})" \
+		>> $datadir/sampled/sampled.en-et-fi-gu-hi-ne.temp$TEMP
+	done
+    fi
+    # get sample of English
+    echo ">> Getting sampled English data"
+    if [ ! -f $datadir/sampled/sampled.en ]; then
+	cat $datadir/*en*/train.*final.en | shuf | head -n $total > $datadir/sampled/sampled.en
+    fi
+    # encode sampled data as bytes and chars
+    for seg in byte char; do
+	if [ ! -f $datadir/sampled/sampled.$BPELANGS.temp$TEMP.$seg ]; then
+	    cat $datadir/sampled/sampled.$BPELANGS.temp$TEMP | python -c "import segment; segment.${seg}_encode()" \
+		> $datadir/sampled/sampled.$BPELANGS.temp$TEMP.$seg
+	fi
+    done
+
+
+    # train bpe models
+    echo ">> Training sentencepiece models"
+    for BPESIZE in $BPESIZES; do
+	langs=$BPELANGS
+	if [ ! -f $datadir/spm_models/spm.$langs-$BPESIZE-temp$TEMP.model ]; then
+	    echo "Training spm model $BPESIZE $TEMP"
+	    python $thisdir/spm_train.py \
+		--input=$datadir/sampled/sampled.$langs.temp$TEMP \
+		--model_prefix=$datadir/spm_models/spm.$langs-$BPESIZE-temp$TEMP \
+		--vocab_size=$BPESIZE \
+		--character_coverage=1.0 \
+		--model_type=bpe \
+		--num_threads=8 
+	fi
+    done
+
+
+    # encode files w/ bpe
+    echo ">> Encoding files with BPE"
+    for pair in "${PAIRS[@]}"; do
+	for dset in train dev test; do
+	    for BPESIZE in $BPESIZES; do
+		src=`echo $pair | cut -d'-' -f1`
+		trg=`echo $pair | cut -d'-' -f2`
+		infix=$BPELANGS-$BPESIZE-temp$TEMP
+		for lang in $src $trg; do
+		    if [[ $BPELANGS == *"$lang"* ]]; then
+			if [ ! -f $datadir/$pair/$dset.$pair.final.$infix.$lang ]; then
+			    python $thisdir/spm_encode.py \
+				--model $datadir/spm_models/spm.$infix.model \
+				--output_format=piece \
+				--inputs $datadir/$pair/$dset.$pair.final.$lang \
+				--outputs $datadir/$pair/$dset.$pair.final.$infix.$lang 
+			fi
+		    fi
+		done
+	    done
+	done
+    done
+done
+
+
+
+# binarise (fairseq-preprocess) for bytes and chars
 echo ">> Binarising files"
 [ -d $datadir/dict ] || mkdir $datadir/dict
+[ -d $databindir ] || mkdir $databindir
 comma_langs=`echo $BPELANGS | perl -pe 's/\-/,/g'`
 maximum_byte=240
-for BPESIZE in char byte $BPESIZES; do
+for BPESIZE in char byte; do
     # get joint dictionary
     if [ ! -f $datadir/dict/dict.$BPELANGS-$BPESIZE.txt ]; then
 	if [[ "$BPESIZE" == "byte" ]]; then
@@ -207,14 +239,12 @@ for BPESIZE in char byte $BPESIZES; do
 		echo "$i 100" >> $datadir/dict/dict.$BPELANGS-$BPESIZE.txt
 	    done
 	else
-	    tail -n +4 $datadir/spm_models/spm.$BPELANGS-$BPESIZE.vocab | cut -f1 | sed 's/$/ 100/g' > $datadir/dict/dict.$BPELANGS-$BPESIZE.txt
+	    tail -n +4 $datadir/spm_models/spm.$BPELANGS-$BPESIZE.vocab | cut -f1 | sed 's/$/ 100/g' \
+		> $datadir/dict/dict.$BPELANGS-$BPESIZE.txt
 	fi
     fi
-    if [[ $BPESIZE == char ]] || [[ $BPESIZE == byte ]]; then
-        infix=$BPESIZE
-    else
-        infix=$BPELANGS-$BPESIZE
-    fi
+
+    infix=$BPELANGS-$BPESIZE
     if [ ! -d $databindir/joint-$BPELANGS-$BPESIZE ]; then
 	for pair in "${PAIRS[@]}"; do
             src=`echo $pair | cut -d'-' -f1`
@@ -223,12 +253,39 @@ for BPESIZE in char byte $BPESIZES; do
 		--trainpref $datadir/$pair/train.$pair.final.$infix \
 		--validpref $datadir/$pair/dev.$pair.final.$infix \
 		--testpref $datadir/$pair/test.$pair.final.$infix \
-		--srcdict $datadir/dict/dict.$BPELANGS-$BPESIZE.txt \
-		--tgtdict $datadir/dict/dict.$BPELANGS-$BPESIZE.txt \
-		--destdir $databindir/joint-$BPELANGS-$BPESIZE \
+		--srcdict $datadir/dict/dict.$infix.txt \
+		--tgtdict $datadir/dict/dict.$infix.txt \
+		--destdir $databindir/joint-$infix \
 		--workers 10
 	done
 	# now binarise each language
-	cp $datadir/dict/dict.$BPELANGS-$BPESIZE.txt $databindir/joint-$BPELANGS-$BPESIZE/dict.txt
+	cp $datadir/dict/dict.$infix.txt $databindir/joint-$infix/dict.txt
     fi
+done
+
+# binarise for subwords
+for BPESIZE in $BPESIZES; do
+    for TEMP in $TEMPS; do
+	# get joint dictionary
+	if [ ! -f $datadir/dict/dict.$BPELANGS-$BPESIZE-temp$TEMP.txt ]; then
+            tail -n +4 $datadir/spm_models/spm.$BPELANGS-$BPESIZE-temp$TEMP.vocab | \
+		cut -f1 | sed 's/$/ 100/g' > $datadir/dict/dict.$BPELANGS-$BPESIZE-temp$TEMP.txt
+        fi
+        infix=$BPELANGS-$BPESIZE-temp$TEMP
+	if [ ! -d $databindir/joint-$infix ]; then
+            for pair in "${PAIRS[@]}"; do
+		src=`echo $pair | cut -d'-' -f1`
+		trg=`echo $pair | cut -d'-' -f2`
+		fairseq-preprocess --source-lang $src --target-lang $trg \
+                    --trainpref $datadir/$pair/train.$pair.final.$infix \
+                    --validpref $datadir/$pair/dev.$pair.final.$infix \
+                    --testpref $datadir/$pair/test.$pair.final.$infix \
+                    --srcdict $datadir/dict/dict.$infix.txt \
+                    --tgtdict $datadir/dict/dict.$infix.txt \
+                    --destdir $databindir/joint-$infix \
+                    --workers 10
+            done
+            cp $datadir/dict/dict.$infix.txt $databindir/joint-$infix/dict.txt
+	fi
+    done
 done
