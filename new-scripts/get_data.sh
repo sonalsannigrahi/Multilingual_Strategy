@@ -149,8 +149,8 @@ if [ ! -f $datadir/ne-en/train.ne-en.en ]; then
     wget -O $datadir/ne-en/raw_corpora/QED.zip https://object.pouta.csc.fi/OPUS-QED/v2.0a/moses/en-ne.txt.zip
     wget -O $datadir/ne-en/raw_corpora/GlobalVoices.zip https://opus.nlpl.eu/download.php?f=GlobalVoices/v2018q4/moses/en-ne.txt.zip
     wget -O $datadir/ne-en/raw_corpora/GNOME.zip https://opus.nlpl.eu/download.php?f=GNOME/v1/moses/en_GB-ne.txt.zip
-    wget -O $datadir/ne-en/raw_corpora/KDE.zip https://opus.nlpl.eu/download.php?f=KDE4/v2/moses/en-ne.txt.zip
-    for corpus in bible-uedin TED2020 QED GlobalVoices GNOME KDE; do
+    wget -O $datadir/ne-en/raw_corpora/KDE4.zip https://opus.nlpl.eu/download.php?f=KDE4/v2/moses/en-ne.txt.zip
+    for corpus in bible-uedin TED2020 QED GlobalVoices GNOME KDE4; do
 	unzip -o $datadir/ne-en/raw_corpora/$corpus -d $datadir/ne-en/raw_corpora/$corpus
 	cat $datadir/ne-en/raw_corpora/$corpus/$corpus.en-ne.en | perl -pe 's/\t/ /g' >> $datadir/ne-en/train.ne-en.en
 	cat $datadir/ne-en/raw_corpora/$corpus/$corpus.en-ne.ne | perl -pe 's/\t/ /g' >> $datadir/ne-en/train.ne-en.ne
