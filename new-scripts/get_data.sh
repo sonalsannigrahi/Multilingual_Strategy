@@ -28,7 +28,7 @@ echo '>> data directories made...'
 ## valid/test wmt data
 for year in 18 19; do
     for dset in dev test; do
-	[ -f $datadir/wmt$year-$dset.tgz ] || wget -O $datadir/wmt$year-$dset.tgz http://data.statmt.org/wmt$year/translation-task/$dset.tgz
+	[ -f $datadir/wmt$year-$dset.tgz ] || wget -O $datadir/wmt$year-$dset.tgz http://data.statmt.org/wmt$year/translation-task/$dset.tgz --no-check-certificate
 	if [ ! -f $datadir/.wmt$year-$dset ]; then
 	    echo ">> unzipping dev files"
 	    tar -zxvf $datadir/wmt$year-$dset.tgz -C $datadir/
@@ -77,11 +77,11 @@ done
 # Wikititles, bible-uedin, localisation, emille, wikipedia-promt, crawled-cleaned
 # TODO: Emille - it is not sentence-aligned yet...
 if [ ! -f $datadir/gu-en/train.gu-en.en ]; then
-    [ -f $datadir/gu-en/raw_corpora/bible.tsv.gz ] || wget -O $datadir/gu-en/raw_corpora/bible.tsv.gz http://data.statmt.org/wmt19/translation-task/bible.gu-en.tsv.gz
-    [ -f $datadir/gu-en/raw_corpora/wiki.tsv.gz ] || wget -O $datadir/gu-en/raw_corpora/wiki.tsv.gz http://data.statmt.org/wmt19/translation-task/wikipedia.gu-en.tsv.gz
-    [ -f $datadir/gu-en/raw_corpora/wikititles.tsv.gz ] || wget -O $datadir/gu-en/raw_corpora/wikititles.tsv.gz http://data.statmt.org/wikititles/v1/wikititles-v1.gu-en.tsv.gz
-    [ -f $datadir/gu-en/raw_corpora/govin-clean.tsv.gz ] || wget -O $datadir/gu-en/raw_corpora/govin-clean.tsv.gz http://data.statmt.org/wmt19/translation-task/govin-clean.gu-en.tsv.gz
-    [ -f $datadir/gu-en/raw_corpora/localisation.tsv.gz ] || wget -O $datadir/gu-en/raw_corpora/localisation.tsv.gz http://data.statmt.org/wmt19/translation-task/opus.gu-en.tsv.gz
+    [ -f $datadir/gu-en/raw_corpora/bible.tsv.gz ] || wget -O $datadir/gu-en/raw_corpora/bible.tsv.gz http://data.statmt.org/wmt19/translation-task/bible.gu-en.tsv.gz --no-check-certificate
+    [ -f $datadir/gu-en/raw_corpora/wiki.tsv.gz ] || wget -O $datadir/gu-en/raw_corpora/wiki.tsv.gz http://data.statmt.org/wmt19/translation-task/wikipedia.gu-en.tsv.gz --no-check-certificate
+    [ -f $datadir/gu-en/raw_corpora/wikititles.tsv.gz ] || wget -O $datadir/gu-en/raw_corpora/wikititles.tsv.gz http://data.statmt.org/wikititles/v1/wikititles-v1.gu-en.tsv.gz --no-check-certificate
+    [ -f $datadir/gu-en/raw_corpora/govin-clean.tsv.gz ] || wget -O $datadir/gu-en/raw_corpora/govin-clean.tsv.gz http://data.statmt.org/wmt19/translation-task/govin-clean.gu-en.tsv.gz --no-check-certificate
+    [ -f $datadir/gu-en/raw_corpora/localisation.tsv.gz ] || wget -O $datadir/gu-en/raw_corpora/localisation.tsv.gz http://data.statmt.org/wmt19/translation-task/opus.gu-en.tsv.gz --no-check-certificate
 
     for corpus in wiki wikititles bible govin-clean localisation; do
 	zcat $datadir/gu-en/raw_corpora/$corpus.tsv.gz | cut -f 1 | perl -pe 's/\t/ /g' >> $datadir/gu-en/train.gu-en.gu
@@ -93,8 +93,8 @@ fi
 ### Estonian Training Data Download
 # europarl-v7, rapid2016, paracrawl
 if [ ! -f $datadir/et-en/train.et-en.en ]; then
-    [ -f $datadir/et-en/raw_corpora/europarl-v7.tgz ] || wget -O $datadir/et-en/raw_corpora/europarl-v7.tgz https://www.statmt.org/europarl/v7/et-en.tgz
-    [ -f $datadir/raw_corpora/rapid2016.tgz ] || wget -O $datadir/raw_corpora/rapid2016.tgz http://data.statmt.org/wmt18/translation-task/rapid2016.tgz
+    [ -f $datadir/et-en/raw_corpora/europarl-v7.tgz ] || wget -O $datadir/et-en/raw_corpora/europarl-v7.tgz https://www.statmt.org/europarl/v7/et-en.tgz --no-check-certificate
+    [ -f $datadir/raw_corpora/rapid2016.tgz ] || wget -O $datadir/raw_corpora/rapid2016.tgz http://data.statmt.org/wmt18/translation-task/rapid2016.tgz --no-check-certificate
     [ -f $datadir/et-en/raw_corpora/paracrawl.tgz ] || wget -O $datadir/et-en/raw_corpora/paracrawl.tgz https://s3.amazonaws.com/web-language-models/paracrawl/release1/paracrawl-release1.en-et.zipporah0-dedup-clean.tgz
 
     for corpus in europarl-v7; do # paracrawl (removed)
@@ -126,8 +126,8 @@ fi
 # europarl-v9, paracrawl, wikititles, rapid2016
 if [ ! -f $datadir/fi-en/train.fi-en.en ]; then
     [ -f $datadir/fi-en/raw_corpora/paracrawl.tgz ] || wget -O $datadir/fi-en/raw_corpora/paracrawl.tgz https://s3.amazonaws.com/web-language-models/paracrawl/release1/paracrawl-release1.en-fi.zipporah0-dedup-clean.tgz
-    [ -f $datadir/fi-en/raw_corpora/europarl.tsv.gz ] || wget -O $datadir/fi-en/raw_corpora/europarl.tsv.gz http://www.statmt.org/europarl/v9/training/europarl-v9.fi-en.tsv.gz
-    [ -f $datadir/fi-en/raw_corpora/wikititles.tsv.gz ] || wget -O $datadir/fi-en/raw_corpora/wikititles.tsv.gz http://data.statmt.org/wikititles/v1/wikititles-v1.fi-en.tsv.gz
+    [ -f $datadir/fi-en/raw_corpora/europarl.tsv.gz ] || wget -O $datadir/fi-en/raw_corpora/europarl.tsv.gz http://www.statmt.org/europarl/v9/training/europarl-v9.fi-en.tsv.gz --no-check-certificate
+    [ -f $datadir/fi-en/raw_corpora/wikititles.tsv.gz ] || wget -O $datadir/fi-en/raw_corpora/wikititles.tsv.gz http://data.statmt.org/wikititles/v1/wikititles-v1.fi-en.tsv.gz --no-check-certificate
     tar -zxvf $datadir/fi-en/raw_corpora/paracrawl.tgz -C $datadir/fi-en/raw_corpora/
 
     for corpus in wikititles europarl; do
@@ -149,7 +149,7 @@ if [ ! -f $datadir/ne-en/train.ne-en.en ]; then
     wget -O $datadir/ne-en/raw_corpora/QED.zip https://object.pouta.csc.fi/OPUS-QED/v2.0a/moses/en-ne.txt.zip
     wget -O $datadir/ne-en/raw_corpora/GlobalVoices.zip https://opus.nlpl.eu/download.php?f=GlobalVoices/v2018q4/moses/en-ne.txt.zip
     wget -O $datadir/ne-en/raw_corpora/GNOME.zip https://opus.nlpl.eu/download.php?f=GNOME/v1/moses/en_GB-ne.txt.zip
-    wget -O $data/ne-en/raw_corpora/KDE.zip https://opus.nlpl.eu/download.php?f=KDE4/v2/moses/en-ne.txt.zip
+    wget -O $datadir/ne-en/raw_corpora/KDE.zip https://opus.nlpl.eu/download.php?f=KDE4/v2/moses/en-ne.txt.zip
     for corpus in bible-uedin TED2020 QED GlobalVoices GNOME KDE; do
 	unzip -o $datadir/ne-en/raw_corpora/$corpus -d $datadir/ne-en/raw_corpora/$corpus
 	cat $datadir/ne-en/raw_corpora/$corpus/$corpus.en-ne.en | perl -pe 's/\t/ /g' >> $datadir/ne-en/train.ne-en.en
@@ -172,7 +172,7 @@ fi
 # IITB, wikititles, HindEnCorp
 if [ ! -f $datadir/hi-en/train.hi-en.en ]; then
     [ -f $datadir/hi-en/raw_corpora/iitb.tgz ] || wget -O $datadir/hi-en/raw_corpora/iitb.tgz https://www.cfilt.iitb.ac.in/~parallelcorp/iitb_en_hi_parallel/iitb_corpus_download/parallel.tgz
-    [ -f $datadir/raw_corpora/wikititles-wmt14.tgz ] || wget -O $datadir/raw_corpora/wikititles-wmt14.tgz https://www.statmt.org/wmt14/wiki-titles.tgz
+    [ -f $datadir/raw_corpora/wikititles-wmt14.tgz ] || wget -O $datadir/raw_corpora/wikititles-wmt14.tgz https://www.statmt.org/wmt14/wiki-titles.tgz --no-check-certificate
     [ -f $datadir/hi-en/raw_corpora/hindencorp.tsv.gz ] || wget -O $datadir/hi-en/raw_corpora/hindencorp.tsv.gz https://lindat.mff.cuni.cz/repository/xmlui/bitstream/handle/11858/00-097C-0000-0023-625F-0/hindencorp05.plaintext.gz
     
     # for hindi-specific corpora
