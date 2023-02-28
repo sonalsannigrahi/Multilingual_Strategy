@@ -1,8 +1,8 @@
 # Tokenisation in Multilingual MT
 
-This repository gathers code to separtely tokenise text into bytes, chars, and BPE and then train different multilingual transformer models in supervised machine translation. 
+This repository gathers code to separately tokenise text into chars and BPE and then train different multilingual transformer models in supervised machine translation. 
 
-## Training Instructions 
+## Setup
 
 First, create a new conda env where you can install the requirements/dependencies. 
 
@@ -14,55 +14,44 @@ $ conda install pytorch torchvision torchaudio cudatoolkit=11.1 -c pytorch -c nv
 $ pip install sentencepiece fairseq
 ```
 
-Locally run the preprocess.sh script to extract, clean, and byte-encode the training and validation data for Finnish, Estonian, Hindi, Gujarati, and Nepali.
-
-```
-$ sh preprocess.sh
-```
-
-Next, run the prepare-{byte, char, bpe}.sh scripts to learn respective tokenisation models, tokenise the data, and then binarise it to get it ready for training. 
-
-```
-$ sh prepare-bpe.sh
-```
-
-Then, run the training scripts on the gpu via the batch files. This should start the training for all the models. 
-
-```
-$ sbatch bpe-tok.batch
-```
-
-## Evaluation Scripts
-
-
-
+## Training and Evaluation Scripts
 ----
 
 New scripts:
 
 Download raw data (produces $pair/{train,dev,test}.$pair.final.{src,trg}
 ```
-bash new-scripts/get_data.sh
+bash train_scripts/get_data.sh
 ```
 
-Preprocess data sets (normalisation, filtering, deduplication, segmentation (bpe, char, bytes), binarisation
+Run the script to transliterate data after:
+
 ```
-bash new-scripts/process_data.sh
+python3 transliterate.py
 ```
 
-Train a model (Rachel's runs)
+Preprocess data sets (normalisation, filtering, deduplication, segmentation (bpe, char), binarisation
 ```
-cd cd models/et-fi-gu-hi-ne2en/sp48k-tmp1.2/{1,2,3}
-sbatch train-bpe.slurm
+bash train_scripts/process_data.sh
+bash train_scripts/process_data_tl.sh
 ```
 
-Generate the validation sets from each checkpoint (after each epoch):
+Train a model as follows (replace {}-{} with the vocabulary size and temperature combination so 24-1.5 for 24K and 1.5 temp):
 ```
-sbatch generate-valid.slurm
+sbatch train_scripts/multilingual/train-bpe-{}-{}-1.slurm
+sbatch train_scripts/bilingual/train-bpe-{}-{}-1.slurm
+sbatch train_scripts/multilingual-transliterate/train-bpe-{}-{}-1.slurm
+sbatch train_scripts/bilingual-transliterate/train-bpe-{}-{}-1.slurm
 ```
-The outputs are saved to `model-bpe/valid_outputs/checkpointEPOCH.pt.postproc.ne-en`, where `EPOCH` is the epoch number.
+
+Generate the validation sets from each checkpoint (after each epoch) [f if finetuning] (replace {}-{} with the vocabulary size and temperature combination so 24-1.5 for 24K and 1.5 temp):
+```
+sbatch generate-valid-ind-{}-{}-1.slurm 
+sbatch generate-valid-ind-{}-{}-f.slurm 
+```
+The outputs are saved to `model-bpe/valid_outputs/checkpointEPOCH.pt.postproc.{}-en`, where `EPOCH` is the epoch number.
 
 Score each generated validation file and produce a tab-separated results table:
 ````
-python ../../../../new-scripts/score-all-epochs-valid.py model-bpe ../../../../data/
+python ../../../../train_scripts/score-all-epochs-valid.py model-bpe ../../../../data/
 ```
